@@ -1,43 +1,78 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight, ArrowDownRight, DollarSign, Wallet, PiggyBank, TrendingUp } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
-import '../config/charconfig';
+import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, subDays, parseISO } from 'date-fns';
+import TransactionList from './TransactionList';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [previousData, setPreviousData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [totalBalance, setTotalBalance] = useState(0);
 
   useEffect(() => {
     try {
-      const storedData = JSON.parse(localStorage.getItem('onboardingDetails') || '{}');
-      if (storedData && storedData.monthlyIncome) {
-        const prevData = JSON.parse(localStorage.getItem('previousFinancialData') || 'null');
-        
-        if (prevData) {
-          setPreviousData(prevData);
-        } else {
-          const totalExp = Object.values(storedData.mainExpenses).reduce(
-            (sum, value) => sum + parseInt(value || '0', 10),
-            0
-          );
-          const initialPrevData = {
-            balance: storedData.currentBalance,
-            income: storedData.monthlyIncome,
-            expenses: totalExp,
-            savings: storedData.monthlyIncome - totalExp
-          };
-          setPreviousData(initialPrevData);
-          localStorage.setItem('previousFinancialData', JSON.stringify(initialPrevData));
-        }
-        
-        setUserData(storedData);
+      const storedData = localStorage.getItem('onboardingDetails');
+      if (!storedData) {
+        navigate('/onboarding');
+        return;
       }
+
+      const parsedData = JSON.parse(storedData);
+      setUserData(parsedData);
+
+      const storedTransactions = localStorage.getItem('transactions');
+      if (storedTransactions) {
+        setTransactions(JSON.parse(storedTransactions));
+      }
+
+      const prevData = localStorage.getItem('previousFinancialData');
+      if (prevData) {
+        setPreviousData(JSON.parse(prevData));
+      } else {
+        const initialPrevData = {
+          balance: parsedData.currentBalance,
+          income: parsedData.monthlyIncome,
+          expenses: parsedData.totalExpenses,
+          savings: parsedData.monthlyIncome - parsedData.totalExpenses
+        };
+        setPreviousData(initialPrevData);
+        localStorage.setItem('previousFinancialData', JSON.stringify(initialPrevData));
+      }
+
+      setTotalBalance(parsedData.currentBalance);
+
     } catch (error) {
-      console.error('Error parsing localStorage data:', error);
+      console.error('Error loading data:', error);
+      navigate('/onboarding');
     }
     setLoading(false);
-  }, []);
+  }, [navigate]);
+
+  // Listen for storage events to update the dashboard in real-time
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'transactions') {
+        const updatedTransactions = JSON.parse(e.newValue);
+        setTransactions(updatedTransactions);
+        
+        // Recalculate total balance
+        const newBalance = updatedTransactions.reduce((acc, transaction) => {
+          return transaction.type === 'expense' 
+            ? acc - transaction.amount 
+            : acc + transaction.amount;
+        }, userData?.currentBalance || 0);
+        
+        setTotalBalance(newBalance);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [userData]);
 
   const formatINR = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -53,6 +88,43 @@ const Dashboard = () => {
     return `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
   };
 
+  const handleEditData = () => {
+    navigate('/onboarding');
+  };
+
+  const getChartData = () => {
+    if (!userData) return [];
+
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = subDays(new Date(), i);
+      return date;
+    }).reverse();
+
+    const sortedTransactions = [...transactions].sort((a, b) =>
+      parseISO(a.date).getTime() - parseISO(b.date).getTime()
+    );
+
+    let runningBalance = userData.currentBalance;
+    return last30Days.map(date => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      const dayTransactions = sortedTransactions.filter(t => 
+        format(parseISO(t.date), 'yyyy-MM-dd') === dateStr
+      );
+
+      dayTransactions.forEach(t => {
+        runningBalance = t.type === 'expense' 
+          ? runningBalance - t.amount 
+          : runningBalance + t.amount;
+      });
+
+      return {
+        date: format(date, 'MMM d'),
+        balance: runningBalance
+      };
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,46 +133,36 @@ const Dashboard = () => {
     );
   }
 
-  if (!userData || !userData.mainExpenses || !previousData) {
+  if (!userData || !previousData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">No Data Available</h2>
           <p className="text-gray-600">Please complete the onboarding process to view your dashboard.</p>
+          <button
+            onClick={() => navigate('/onboarding')}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Go to Onboarding
+          </button>
         </div>
       </div>
     );
   }
 
-  const totalExpenses = Object.values(userData.mainExpenses).reduce(
-    (sum, value) => sum + parseInt(value || '0', 10),
-    0
-  );
+  const monthlyExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  const actualSavings = userData.monthlyIncome - totalExpenses;
+  const actualSavings = userData.monthlyIncome - monthlyExpenses;
   const savingsRate = (actualSavings / userData.monthlyIncome) * 100;
-
-  if (
-    userData.currentBalance !== previousData.balance ||
-    userData.monthlyIncome !== previousData.income ||
-    totalExpenses !== previousData.expenses ||
-    actualSavings !== previousData.savings
-  ) {
-    const newPreviousData = {
-      balance: userData.currentBalance,
-      income: userData.monthlyIncome,
-      expenses: totalExpenses,
-      savings: actualSavings
-    };
-    localStorage.setItem('previousFinancialData', JSON.stringify(newPreviousData));
-  }
 
   const stats = [
     {
       name: 'Current Balance',
-      value: formatINR(userData.currentBalance),
-      change: calculatePercentageChange(previousData.balance, userData.currentBalance),
-      trend: userData.currentBalance >= previousData.balance ? 'up' : 'down',
+      value: formatINR(totalBalance),
+      change: calculatePercentageChange(previousData.balance, totalBalance),
+      trend: totalBalance >= previousData.balance ? 'up' : 'down',
       icon: Wallet,
     },
     {
@@ -112,9 +174,9 @@ const Dashboard = () => {
     },
     {
       name: 'Monthly Expenses',
-      value: formatINR(totalExpenses),
-      change: calculatePercentageChange(previousData.expenses, totalExpenses),
-      trend: totalExpenses <= previousData.expenses ? 'up' : 'down',
+      value: formatINR(monthlyExpenses),
+      change: calculatePercentageChange(previousData.expenses, monthlyExpenses),
+      trend: monthlyExpenses <= previousData.expenses ? 'up' : 'down',
       icon: PiggyBank,
     },
     {
@@ -126,14 +188,21 @@ const Dashboard = () => {
     },
   ];
 
-  const expenseCategories = Object.keys(userData.mainExpenses);
-  const expenseValues = Object.values(userData.mainExpenses).map(value => parseInt(value || '0', 10));
+  const chartData = getChartData();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Financial Dashboard</h1>
-        
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Financial Dashboard</h1>
+          <button
+            onClick={handleEditData}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Edit Financial Data
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <div
@@ -165,65 +234,31 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="rounded-lg bg-white shadow p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Expense Breakdown</h3>
-              <div className="space-y-4">
-                {expenseCategories.map((category, index) => (
-                  <div key={category} className="relative pt-1">
-                    <div className="flex mb-2 items-center justify-between">
-                      <div>
-                        <span className="text-sm font-semibold inline-block text-gray-700 capitalize">
-                          {category}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-semibold inline-block text-indigo-600">
-                          {formatINR(expenseValues[index])}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-100">
-                      <div
-                        style={{ width: `${(expenseValues[index] / totalExpenses) * 100}%` }}
-                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600"
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Recent Transactions</h3>
+            <TransactionList showAll={false} limit={5} />
           </div>
 
-          <div>
-            <div className="rounded-lg bg-white shadow p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Savings Progress</h3>
-              <div className="relative pt-1">
-                <div className="flex mb-2 items-center justify-between">
-                  <div>
-                    <span className="text-sm font-semibold inline-block text-gray-700">
-                      Monthly Goal
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-semibold inline-block text-indigo-600">
-                      {formatINR(userData.savingsGoal)}
-                    </span>
-                  </div>
-                </div>
-                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-100">
-                  <div
-                    style={{ width: `${Math.min((actualSavings / userData.savingsGoal) * 100, 100)}%` }}
-                    className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
-                      actualSavings >= userData.savingsGoal ? 'bg-green-500' : 'bg-indigo-600'
-                    }`}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Current savings: {formatINR(actualSavings)} / {formatINR(userData.savingsGoal)}
-                </p>
-              </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Balance Over Time</h3>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="balance"
+                    stroke="#4F46E5"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

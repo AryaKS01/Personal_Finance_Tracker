@@ -12,6 +12,9 @@ const Login = () => {
   const [wrongPassword, setWrongPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -53,11 +56,14 @@ const Login = () => {
     const user = users.find(user => user.email === resetEmail);
 
     if (user) {
-      const newPassword = prompt("Enter your new password");
-      user.password = newPassword;
-      localStorage.setItem('finance', JSON.stringify(users));
-      toast.success('Password reset successfully!');
-      setShowForgotPassword(false);
+      if (newPassword === confirmPassword) {
+        user.password = newPassword;
+        localStorage.setItem('finance', JSON.stringify(users));
+        toast.success('Password reset successfully!');
+        setShowForgotPassword(false);
+      } else {
+        setPasswordMismatch(true);
+      }
     } else {
       toast.error('User not found');
     }
@@ -117,6 +123,31 @@ const Login = () => {
                 className="block w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-600 focus:outline-none"
               />
             </div>
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+              <input
+                id="newPassword"
+                name="newPassword"
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="block w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="block w-full px-4 py-2 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+              />
+              {passwordMismatch && <p className="text-red-500 text-sm mt-2">Passwords do not match</p>}
+            </div>
             <button
               type="submit"
               className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -144,4 +175,5 @@ const Login = () => {
 };
 
 export default Login;
+
 

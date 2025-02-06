@@ -29,18 +29,12 @@ export default function OnboardingForm() {
         savingsGoal: parseFloat(formData.savingsGoal),
         mainExpenses: formData.mainExpenses,
         currentBalance: parseFloat(formData.monthlyIncome) - totalExpenses,
+        totalExpenses: totalExpenses,
         currency: 'INR'
       };
 
-      // Save the user data to localStorage with the key 'onboardingDetails'
       localStorage.setItem('onboardingDetails', JSON.stringify(userData));
-
       toast.success('Preferences saved successfully!');
-      
-      // Backend team: Replace this console.log with an API call to store data in MongoDB
-      console.log('User Data:', userData);
-      
-      // Backend team: Ensure the dashboard route is accessible after successful data storage
       navigate('/dashboard');
     } catch (error) {
       toast.error('Failed to save preferences');
@@ -143,4 +137,3 @@ export default function OnboardingForm() {
     </div>
   );
 }
-

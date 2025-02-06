@@ -8,6 +8,8 @@ import OnboardingForm from './pages/OnboardingForm';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
+import Transactions from './pages/Transactions';
+import TransactionList from './pages/TransactionList';
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
           <Route element={<AuthLayout />}></Route>
           <Route element={<DashboardLayout />}>
            <Route path="/dashboard" element={<Dashboard />} />
+           <Route path="transactions" element={<TransactionList />} />
           
           </Route>
         </Routes>

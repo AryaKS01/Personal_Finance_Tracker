@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/Dashboard', icon: LayoutDashboard },
   { name: 'Transactions', href: '/transactions', icon: Receipt },
   { name: 'Budget', href: '/budget', icon: PiggyBank },
   { name: 'Savings', href: '/savings', icon: Target },
@@ -20,6 +20,11 @@ const navigation = [
 
 export default function Sidebar() {
   const location = useLocation();
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
@@ -37,14 +42,17 @@ export default function Sidebar() {
                     <li key={item.name}>
                       <Link
                         to={item.href}
-                        className={`
-                          group flex gap-x-3 rounded-md p-2 text-sm leading-6
-                          ${
-                            isActive
-                              ? 'bg-gray-50 text-indigo-600'
-                              : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                        onClick={(e) => {
+                          if (location.pathname === item.href) {
+                            e.preventDefault(); // Prevents unnecessary re-render
+                            window.scrollTo(0, 0);
                           }
-                        `}
+                        }}
+                        className={`group flex gap-x-3 rounded-md p-2 text-sm leading-6 ${
+                          isActive
+                            ? 'bg-gray-50 text-indigo-600'
+                            : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                        }`}
                       >
                         <item.icon
                           className={`h-6 w-6 shrink-0 ${

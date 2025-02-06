@@ -28,14 +28,10 @@ const quickLinks = [
 
 function Footer() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-grow">
-        {/* Your main content goes here */}
-        <div className="p-8">
-          <h1>Main Content Area</h1>
-        </div>
-      </main>
-      
+    <div className="flex flex-col min-h-screen">
+      {/* This div ensures content takes up available space */}
+      <div className="flex-grow"></div>
+
       <footer className="bg-white border-t border-gray-100">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center sm:flex-row sm:justify-between">
@@ -43,7 +39,7 @@ function Footer() {
               <Wallet2 className="h-6 w-6 text-indigo-600" />
               <span className="text-lg font-semibold text-gray-900">FinanceFlow</span>
             </div>
-            
+
             <nav className="mt-4 sm:mt-0">
               <ul className="flex space-x-6">
                 {quickLinks.map((link) => (
@@ -59,12 +55,12 @@ function Footer() {
               </ul>
             </nav>
           </div>
-          
+
           <div className="mt-8 flex flex-col items-center sm:flex-row sm:justify-between">
             <p className="text-sm text-gray-500">
               &copy; {new Date().getFullYear()} FinanceFlow. All rights reserved.
             </p>
-            
+
             <div className="mt-4 sm:mt-0 flex space-x-4">
               {socialLinks.map((item) => (
                 <a
@@ -85,3 +81,6 @@ function Footer() {
 }
 
 export default Footer;
+
+
+
