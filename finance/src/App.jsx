@@ -10,6 +10,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import TransactionList from './pages/TransactionList';
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/onboarding" element={<OnboardingForm />} />
           <Route element={<AuthLayout />}></Route>
           <Route element={<DashboardLayout />}>
