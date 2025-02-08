@@ -163,7 +163,7 @@ TsRouter.get("/recent", async (req, res) => {
 TsRouter.get("/monthly-summary", async (req, res) => {
     try {
         const result = await Transaction.aggregate([
-            { $match: { userId: req.id } },
+            { $match: { userId: new mongoose.Types.ObjectId(req.id) } },
             {
                 $project: {
                     amount: 1,

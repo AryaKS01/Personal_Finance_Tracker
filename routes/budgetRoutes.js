@@ -15,7 +15,7 @@ BRouter.post("/add", async (req, res) => {
         }
 
         const totalSpent = await Transaction.aggregate([
-            { $match: { userId , category: name, type: "expense" } },
+            { $match: { userId: new mongoose.Types.ObjectId(req.id) , category: name, type: "expense" } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
 
