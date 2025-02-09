@@ -1,6 +1,7 @@
 const express = require('express');
 const Transaction = require('../models/transactionModel');
-const BudgetModel = require('../models/budgetModel'); // Import Budget Model
+const BudgetModel = require('../models/budgetModel');
+const mongoose = require('mongoose');
 const TsRouter = express.Router();
 
 TsRouter.post("/add", async (req, res) => {
@@ -25,7 +26,7 @@ TsRouter.post("/add", async (req, res) => {
         if (type === "expense") {
             const budget = await BudgetModel.findOne({ userId: req.id, name: category });
             if (budget) {
-                budget.total += amount;
+                budget.total += +amount;
                 await budget.save();
 
                 if (budget.total > budget.limit) {
@@ -71,7 +72,7 @@ TsRouter.put("/edit/:transactionId", async (req, res) => {
         if (oldType === "expense") {
             const oldBudget = await BudgetModel.findOne({ userId: req.id, name: oldCategory });
             if (oldBudget) {
-                oldBudget.total -= oldAmount;
+                oldBudget.total -= +oldAmount;
                 await oldBudget.save();
             }
         }
@@ -79,7 +80,7 @@ TsRouter.put("/edit/:transactionId", async (req, res) => {
         if (type === "expense") {
             const newBudget = await BudgetModel.findOne({ userId: req.id, name: category });
             if (newBudget) {
-                newBudget.total += amount;
+                newBudget.total += +amount;
                 await newBudget.save();
 
                 if (newBudget.total > newBudget.limit) {
@@ -113,7 +114,7 @@ TsRouter.delete("/delete/:transactionId", async (req, res) => {
         if (transaction.type === "expense") {
             const budget = await BudgetModel.findOne({ userId: req.id, name: transaction.category });
             if (budget) {
-                budget.total -= transaction.amount;
+                budget.total -= +transaction.amount;
                 await budget.save();
             }
         }
