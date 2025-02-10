@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig({
-  base: "/", // Keep this inside the main config
+  base: "/",
   plugins: [react(), runtimeErrorOverlay(), themePlugin()],
   resolve: {
     alias: {
@@ -19,7 +19,8 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "build"),
-    emptyOutDir: true,
+    outDir: path.resolve(__dirname, "build/public"), // Change "dist" to "build"
+    emptyOutDir: true, // Clears the folder before building
   },
 });
+
