@@ -1,0 +1,32 @@
+{
+  "name": "personal_finance_tracker",
+  "version": "1.0.0",
+  "description": "This application enables users to manage their personal finances by tracking income, expenses, and savings. It aims to help users make informed financial decisions and set financial goals.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AryaKS01/Personal_Finance_Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AryaKS01/Personal_Finance_Tracker/issues"
+  },
+  "homepage": "https://github.com/AryaKS01/Personal_Finance_Tracker#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.0",
+    "nodemailer": "^6.10.0",
+    "nodemon": "^3.1.9",
+    "personal_finance_tracker": "file:"
+  }
+}
