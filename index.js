@@ -5,6 +5,7 @@ const dbserver=require('./config')
 const UserRouter=require('./routes/userRoutes');
 const TsRouter=require('./routes/transactionRoutes')
 const BRouter = require('./routes/budgetRoutes');
+const SRouter = require('./routes/savingRoutes');
 const authMw=require('./middleware/Auth');
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -12,6 +13,7 @@ app.use(express.urlencoded({extended:true}))
 app.use("/user",UserRouter);
 app.use("/transaction",authMw(),TsRouter);
 app.use("/budget",authMw(),BRouter);
+app.use("/saving",authMw(),SRouter);
 
 const PORT= process.env.PORT;
 app.listen(PORT, async()=>{
