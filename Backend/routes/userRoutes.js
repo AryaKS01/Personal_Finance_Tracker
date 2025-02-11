@@ -38,7 +38,7 @@ UserRouter.post("/register", (req,res)=>{
                 let userData = { ...req.body, password: hash };
                 let newUser=await UserModel.create(userData);
                 var token = jwt.sign({ userId: newUser._id }, process.env.SECRET_KEY);
-                const verifyLink = `http://localhost:${PORT}/user/verify_email/${token}`;
+                const verifyLink = `https://haris0704-personal-finance-tracker.onrender.com/user/verify_email/${token}`;
 
                
                 const info = await transporter.sendMail({
@@ -104,7 +104,7 @@ UserRouter.post("/login", async (req, res) => {
             if (result) {
                 if(!userData.verified){
                     var token = jwt.sign({ userId: userData._id }, process.env.SECRET_KEY);
-                const verifyLink = `http://localhost:${PORT}/user/verify_email/${token}`;
+                const verifyLink = `https://haris0704-personal-finance-tracker.onrender.com/user/verify_email/${token}`;
 
                 const info = await transporter.sendMail({
                     from: "Admin",
