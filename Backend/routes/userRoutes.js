@@ -137,7 +137,7 @@ UserRouter.post("/forget_password", async (req, res) => {
         }
 
         var token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: "15min" });
-        const resetLink = `http://localhost:${PORT}/user/reset_password/${token}`;
+        const resetLink = `https://haris0704-personal-finance-tracker.onrender.com/user/reset_password/${token}`;
 
         const info = await transporter.sendMail({
             from: "Admin",
